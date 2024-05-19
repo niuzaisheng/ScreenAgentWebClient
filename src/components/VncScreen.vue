@@ -35,23 +35,25 @@ function readQueryVariable(name, defaultValue) {
 // Build the websocket URL used to connect
 let url; 
 const path = readQueryVariable('path', 'websockify');
+const host = '127.0.0.1';
+const port = '6080';
 
-if (window.location.protocol === "https:") {
-    url = 'wss';
-} else {
-    url = 'ws';
-}
-url += '://' + host;
-if (port) {
-    url += ':' + port;
-}
-url += '/' + path;
+// if (window.location.protocol === "https:") {
+//     url = 'wss';
+// } else {
+//     url = 'ws';
+// }
+// url += '://' + host;
+// if (port) {
+//     url += ':' + port;
+// }
+// url += '/' + path;
+
+url = `ws://${host}:${port}/${path}`; // TODO change to wss
 
 // Read parameters specified in the URL query string
 // By default, use the host and port of server that served this file
 let localStorage = window.localStorage;
-const host = '127.0.0.1';
-const port = '6080';
 
 let screen = ref(null);
 // Since most operating systems will catch Ctrl+Alt+Del
