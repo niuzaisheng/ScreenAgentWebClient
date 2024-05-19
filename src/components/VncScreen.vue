@@ -79,7 +79,7 @@ function disconnectedFromServer(e) {
 
 
 function askPassword() {
-    let inputPassword = prompt("VNC Password Required:");
+    let inputPassword = prompt("VNC Password Required, this password will not upload to the cloud, will be stored in your browser locally.");
     localStorage.setItem('password', inputPassword);
     return inputPassword;
 }
