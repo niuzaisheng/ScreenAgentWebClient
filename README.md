@@ -23,21 +23,21 @@ Step 1, Prepare the desktop to be controlled.
 First, you need to prepare the desktop operating system to be controlled, where the VNC Server is installed, such as [TightVNC](https://www.tightvnc.com/download.php).
 
 Step 2, Start a websockify to connect to the VNC server.
-websockify translates WebSockets traffic to normal socket traffic, so you can connect to a VNC server from a web browser.
+The [websockify](https://github.com/novnc/websockify) translates WebSockets traffic to normal socket traffic, so you can connect to a VNC server from a web browser.
 
 ```sh
-git clone https://github.com/novnc/websockify.git
-./novnc_proxy --listen localhost:6080 --vnc localhost:5900
+./novnc_proxy --vnc localhost:5900
 ```
 where:
-` --listen ` is the address and port for ScreenAgent web page.
-` --vnc ` is the address and port of the VNC server you want to connect to.
+` --vnc ` is the address and port of the VNC server you want to connect to, you maybe need to change the port number according to your VNC server configuration.
+` ./novnc_proxy ` will clone the websockify repository and start the websockify server.
 
-Then open your browser and visit `https://screenagent.pages.dev` to see the ScreenAgent web page. You will be asked for your Remote Desktop connection password when the page loads, the password will send to your own websockify listen by `novnc_proxy`, and will not upload to the cloud.
+Then open your browser and visit https://screenagent.pages.dev to see the ScreenAgent web page. You will be asked for your Remote Desktop connection password when the page loads, the password will send to your own websockify listen by `novnc_proxy`, and will not upload to the cloud.
 
-Or you want to build and run the ScreenAgent web client locally, you can follow the steps below.
+Simple as that.
 
-Step 2, Build and run the ScreenAgent web client
+## Build and run the ScreenAgent web client locally
+
 ```sh
 npm install
 npm run build
