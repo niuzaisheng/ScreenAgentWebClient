@@ -389,6 +389,10 @@ async function sendPormptHandle() {
             dangerouslyAllowBrowser: true,
         });
     } else {
+        if (apiKey.value === '') {
+            layer.msg('OpenAI API Key is empty, please fill in Model Settings');
+            return;
+        }
         openai = new OpenAI({
             apiKey: apiKey.value,
             dangerouslyAllowBrowser: true,
