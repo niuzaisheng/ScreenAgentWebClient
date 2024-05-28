@@ -23,7 +23,11 @@
                     <lay-form-item label="API Base URL">
                         <lay-input v-model="baseURL" placeholder="http://localhost:8000"></lay-input>
                     </lay-form-item>
+                    <lay-form-item label="Model Name">
+                        <lay-input v-model="selfServerModelName" placeholder="Phi-3-vision-128k-instruct"></lay-input>
+                    </lay-form-item>
                 </div>
+
             </lay-form>
         </lay-collapse-item>
 
@@ -70,7 +74,7 @@
                 </lay-form-item>
 
                 <lay-form-item>
-                    <lay-button type="primary" :loading="sendPormptLoading" @click="sendPormptHandle" fluid>③ Send
+                    <lay-button type="primary" :loading="sendPormptLoading" @click="sendPormptHandle" fluid> ③ Send 
                         Pormpt to
                         VLM</lay-button>
                 </lay-form-item>
@@ -127,7 +131,8 @@
                         <lay-container>
                             <lay-row>
                                 <lay-col span="24">
-                                    <lay-panel v-for="(action, index) in events" :key="index" style="margin: 5px; padding: 5px">
+                                    <lay-panel v-for="(action, index) in events" :key="index"
+                                        style="margin: 5px; padding: 5px">
                                         <p> {{ action.toIdealDisplayFormat() }} </p>
                                     </lay-panel>
                                 </lay-col>
@@ -253,6 +258,7 @@ const sendPormptLoading = ref(false);
 function setSelectedModel(model) {
     selectedModelName = model;
 }
+const selfServerModelName = ref('');
 
 // ScreenAgent pipeline panel
 const operatingSystemNameMap = ref({
@@ -383,11 +389,14 @@ async function sendPormptHandle() {
         return;
     }
     let openai;
+    let modelName;
     if (selectedModelName === 'self-server') {
         openai = new OpenAI({
+            apiKey: '',
             baseURL: baseURL.value,
             dangerouslyAllowBrowser: true,
         });
+        modelName = selfServerModelName.value;
     } else {
         if (apiKey.value === '') {
             layer.msg('OpenAI API Key is empty, please fill in Model Settings');
@@ -397,16 +406,21 @@ async function sendPormptHandle() {
             apiKey: apiKey.value,
             dangerouslyAllowBrowser: true,
         });
+        modelName = selectedModelName;
     }
-    sendPormptLoading.value = true;
-    layer.msg('Waiting for response...');
+
     if (rfb) {
         let imageBase64 = rfb.toDataURL("image/jpeg", 1);
         sendScreenImage.value = imageBase64;
+        originalResponseDisplay.value = '';
         var ret = '';
         try {
-            const response = await openai.chat.completions.create({
-                model: selectedModelName,
+            sendPormptLoading.value = true;
+            layer.msg('Waiting for response...');
+
+            const stream = await openai.chat.completions.create({
+                model: modelName,
+                stream: true,
                 messages: [
                     {
                         role: "user",
@@ -422,18 +436,27 @@ async function sendPormptHandle() {
                     },
                 ],
             });
-            console.log(response.choices[0]);
-            ret = response.choices[0].message.content;
+            for await (const chunk of stream) {
+                let delta = chunk.choices[0]?.delta?.content || '';
+                if (delta !== '') {
+                    originalResponseDisplay.value += delta;
+                }
+            }
+
         } catch (error) {
             console.error(error);
             ret = error;
+        } finally {
+            sendPormptLoading.value = false;
         }
     }
-    sendPormptLoading.value = false;
-    originalResponseDisplay.value = ret;
+    else {
+        layer.msg('No connection to VNC server');
+    }
 }
 
 function parseActionsHandle() {
+    actionsList.value = [];
     actionsList.value = parseActionsFromText(responseEditor.value);
 }
 
