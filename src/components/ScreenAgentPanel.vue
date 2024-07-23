@@ -1,4 +1,19 @@
 <template>
+
+    <lay-collapse openKeys="remote-control">
+        <lay-collapse-item title="Remote Control" id="remote-control">
+            <lay-form label-position="top">
+                <lay-form-item label="VNC Password">
+                    <lay-input v-model="password" placeholder="password" type="password"></lay-input>
+                    <p>this password will not upload to the cloud, will be stored in your browser locally.</p>
+                </lay-form-item>
+                <lay-form-item>
+                    <lay-button type="primary" @click="connectVncServer" fluid>Connect to VNC Server</lay-button>
+                </lay-form-item>
+            </lay-form>
+        </lay-collapse-item>
+    </lay-collapse>
+
     <lay-collapse openKeys="model-settings">
         <lay-collapse-item title="Model Settings" id="model-settings">
             <lay-form label-position="top">
@@ -222,6 +237,7 @@
             </lay-form>
         </lay-collapse-item>
     </lay-collapse>
+
 </template>
 
 <script setup>
@@ -235,6 +251,12 @@ import Automaton from './Automaton.vue';
 let rfb;
 let localStorage = window.localStorage;
 
+const password = ref(localStorage.getItem('password') || '');
+
+// Remote Control panel
+function connectVncServer(){
+    bus.emit('newConnection');
+}
 
 // Model settings panel
 const selectedModel = ref(1);

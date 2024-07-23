@@ -35,7 +35,7 @@ function readQueryVariable(name, defaultValue) {
 // Build the websocket URL used to connect
 let url; 
 const path = readQueryVariable('path', 'websockify');
-const host = '127.0.0.1';
+const host = 'localhost';
 const port = '6080';
 
 // if (window.location.protocol === "https:") {
@@ -94,7 +94,6 @@ function updateDesktopName(e) {
     layer.notify({ title: 'Connection Message', content: `Connected to desktop ${desktopName}!`, icon: 1 })
 }
 
-
 function newConnection(password) {
     // Creating a new RFB object will start a new connection
     rfb = new RFB(screen.value, url, { credentials: { password: password } });
@@ -105,7 +104,6 @@ function newConnection(password) {
     rfb.addEventListener("disconnect", disconnectedFromServer);
     rfb.addEventListener("credentialsrequired", credentialsAreRequired);
     rfb.addEventListener("desktopname", updateDesktopName);
-
 }
 
 bus.on('GetScreenSize', () => {
@@ -118,14 +116,18 @@ bus.on('SendCtrlAltDel', () => {
     sendCtrlAltDel();
 });
 
-onMounted(() => {
+bus.on('newConnection', () => {
+    let password = localStorage.getItem('password');
+    newConnection(password);
+});
 
+
+onMounted(() => {
     let password = localStorage.getItem('password');
     if (!password) {
         password = askPassword();
     }
     newConnection(password);
-
 });
 
 
