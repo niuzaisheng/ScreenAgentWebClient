@@ -1,6 +1,7 @@
 <script setup>
 import VncScreen from './components/VncScreen.vue'
 import ScreenAgentPanel from './components/ScreenAgentPanel.vue'
+import WelcomeTips from './components/WelcomeTips.vue'
 </script>
 
 
@@ -32,6 +33,7 @@ import ScreenAgentPanel from './components/ScreenAgentPanel.vue'
       </lay-row>
     </lay-body>
   </lay-layout>
+  <WelcomeTips />
 
 </template>
 
@@ -58,7 +60,6 @@ export default {
 </script>
 
 <style>
-
 .layui-header {
   align-items: center;
   height: 5vh;

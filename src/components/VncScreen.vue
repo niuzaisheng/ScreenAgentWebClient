@@ -2,6 +2,18 @@
     <div id="screen" ref="screen">
         <!-- This is where the remote screen will appear -->
     </div>
+
+    <lay-layer title="VNC Password Required" v-model="askPasswordLayerVisible" :shade="false" :btn="action">
+        <lay-container>
+            <lay-form label-position="top">
+                <lay-form-item label="VNC Password">
+                    <lay-input v-model="vncPassword" placeholder="password" type="password" password></lay-input>
+                    <p>this password will not upload to the cloud, will be stored in your browser locally.</p>
+                </lay-form-item>
+            </lay-form>
+        </lay-container>
+    </lay-layer>
+
 </template>
 
 <script setup>
@@ -9,6 +21,23 @@ import { ref, onMounted, inject } from 'vue';
 import RFB from '@novnc/novnc/core/rfb.js';
 import bus from '../eventBus';
 import { layer } from '@layui/layui-vue';
+
+import { storeToRefs } from 'pinia'
+import { useSettingsStore } from '../stores/settings';
+
+const settingsStore = useSettingsStore();
+const { vncPassword } = storeToRefs(settingsStore);
+
+const askPasswordLayerVisible = ref(false);
+const action = ref([
+    {
+        text: "Close",
+        callback: () => {
+            askPasswordLayerVisible.value = false;
+            newConnection();
+        }
+    }
+])
 
 let rfb;
 
@@ -35,7 +64,7 @@ function readQueryVariable(name, defaultValue) {
 // Build the websocket URL used to connect
 let url; 
 const path = readQueryVariable('path', 'websockify');
-const host = '127.0.0.1';
+const host = 'localhost';
 const port = '6080';
 
 // if (window.location.protocol === "https:") {
@@ -78,15 +107,8 @@ function disconnectedFromServer(e) {
 }
 
 
-function askPassword() {
-    let inputPassword = prompt("VNC Password Required, this password will not upload to the cloud, will be stored in your browser locally.");
-    localStorage.setItem('password', inputPassword);
-    return inputPassword;
-}
-
 function credentialsAreRequired(e) {
-    let password = askPassword();
-    rfb.sendCredentials({ password: password });
+    askPasswordLayerVisible.value = true;
 }
 
 function updateDesktopName(e) {
@@ -94,10 +116,9 @@ function updateDesktopName(e) {
     layer.notify({ title: 'Connection Message', content: `Connected to desktop ${desktopName}!`, icon: 1 })
 }
 
-
-function newConnection(password) {
+function newConnection() {
     // Creating a new RFB object will start a new connection
-    rfb = new RFB(screen.value, url, { credentials: { password: password } });
+    rfb = new RFB(screen.value, url, { credentials: { password: vncPassword.value } });
     rfb.scaleViewport = true;
     bus.emit('rfbCreated', rfb);
     // Add listeners to important events from the RFB module
@@ -105,7 +126,6 @@ function newConnection(password) {
     rfb.addEventListener("disconnect", disconnectedFromServer);
     rfb.addEventListener("credentialsrequired", credentialsAreRequired);
     rfb.addEventListener("desktopname", updateDesktopName);
-
 }
 
 bus.on('GetScreenSize', () => {
@@ -118,14 +138,15 @@ bus.on('SendCtrlAltDel', () => {
     sendCtrlAltDel();
 });
 
+bus.on('newConnection', () => {
+    newConnection();
+});
+
+
 onMounted(() => {
-
-    let password = localStorage.getItem('password');
-    if (!password) {
-        password = askPassword();
+    if(vncPassword.value !== '') {
+        newConnection();
     }
-    newConnection(password);
-
 });
 
 
