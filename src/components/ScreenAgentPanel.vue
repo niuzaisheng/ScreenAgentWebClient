@@ -4,7 +4,7 @@
         <lay-collapse-item title="Remote Control" id="remote-control">
             <lay-form label-position="top">
                 <lay-form-item label="VNC Password">
-                    <lay-input v-model="password" placeholder="password" type="password"></lay-input>
+                    <lay-input v-model="vncPassword" type="password"></lay-input>
                     <p>this password will not upload to the cloud, will be stored in your browser locally.</p>
                 </lay-form-item>
                 <lay-form-item>
@@ -36,7 +36,7 @@
 
                 <div id="self-sever-settings" v-show="selectedModel === 3">
                     <lay-form-item label="API Base URL">
-                        <lay-input v-model="baseURL" placeholder="http://localhost:8000"></lay-input>
+                        <lay-input v-model="selfServerBaseURL" placeholder="http://localhost:8000"></lay-input>
                     </lay-form-item>
                     <lay-form-item label="Model Name">
                         <lay-input v-model="selfServerModelName" placeholder="Phi-3-vision-128k-instruct"></lay-input>
@@ -79,7 +79,7 @@
                 <Automaton />
 
                 <lay-form-item label="Prompt">
-                    <lay-textarea v-model="promptDisplay" :autosize="{ minHeight: 100 }"></lay-textarea>
+                    <lay-textarea v-model="promptDisplay" :autosize="{ minHeight: 100, maxHeight: 300 }"></lay-textarea>
                 </lay-form-item>
 
                 <lay-form-item v-show="sendScreenImage" label="Send Screen Image">
@@ -89,14 +89,14 @@
                 </lay-form-item>
 
                 <lay-form-item>
-                    <lay-button type="primary" :loading="sendPormptLoading" @click="sendPormptHandle" fluid> ③ Send 
+                    <lay-button type="primary" :loading="sendPormptLoading" @click="sendPormptHandle" fluid> ③ Send
                         Pormpt to
                         VLM</lay-button>
                 </lay-form-item>
 
                 <lay-form-item label="Original Response">
                     <lay-textarea v-model="originalResponseDisplay" placeholder="Original Response"
-                        :autosize="{ minHeight: 100 }" disabled="disabled"></lay-textarea>
+                        :autosize="{ minHeight: 100, maxHeight: 300 }" disabled="disabled"></lay-textarea>
                 </lay-form-item>
 
                 <lay-form-item>
@@ -107,7 +107,7 @@
 
                 <lay-form-item label="Response Editor">
                     <lay-textarea v-model="responseEditor" placeholder="Response Editor"
-                        :autosize="{ minHeight: 100 }"></lay-textarea>
+                        :autosize="{ minHeight: 100, maxHeight: 300 }"></lay-textarea>
                 </lay-form-item>
 
                 <lay-form-item>
@@ -246,41 +246,34 @@ import { layer } from '@layui/layer-vue'
 import OpenAI from "openai";
 import { Position, ClickableArea, Action, MouseAction, MouseButton, MouseActionType, KeyboardAction, KeyboardActionType, WaitAction, PlanAction, EvaluateSubTaskAction, parseActionsFromText } from '../action';
 import bus from '../eventBus';
+
+import { storeToRefs } from 'pinia'
+import { useSettingsStore } from '../stores/settings';
+
 import Automaton from './Automaton.vue';
 
 let rfb;
-let localStorage = window.localStorage;
 
-const password = ref(localStorage.getItem('password') || '');
+const settingsStore = useSettingsStore();
+const { vncPassword,
+    selectedModel,
+    selectedModelName,
+    apiKey,
+    selfServerBaseURL,
+    selfServerModelName,
+    selectedOperatingSystem,
+    selectedPromptLanguage
+} = storeToRefs(settingsStore);
 
 // Remote Control panel
-function connectVncServer(){
+function connectVncServer() {
     bus.emit('newConnection');
 }
 
-// Model settings panel
-const selectedModel = ref(1);
-
-var selectedModelName = 'gpt-4o'; // default 
-
-const baseURL = ref('http://localhost:8000'); // Self Server Base URL
-watchEffect(() => {
-    localStorage.setItem('baseURL', baseURL.value);
-});
-
-const apiKey = ref(''); // OpenAI API Key
-if (localStorage.getItem('apiKey')) {
-    apiKey.value = localStorage.getItem('apiKey');
-}
-watchEffect(() => {
-    localStorage.setItem('apiKey', apiKey.value);
-});
-
 const sendPormptLoading = ref(false);
 function setSelectedModel(model) {
-    selectedModelName = model;
+    selectedModelName.value = model;
 }
-const selfServerModelName = ref('');
 
 // ScreenAgent pipeline panel
 const operatingSystemNameMap = ref({
@@ -288,14 +281,13 @@ const operatingSystemNameMap = ref({
     "Linux Desktop": "linux",
     // "MacOS": "macos",
 })
-const selectedOperatingSystem = ref("win");
+
 provide('selectedOperatingSystem', selectedOperatingSystem);
 
 const promptLanguageMap = ref({
     "English": "en",
     "Chinese-Simplified": "zh",
 })
-const selectedPromptLanguage = ref("en");
 provide('selectedPromptLanguage', selectedPromptLanguage);
 
 const taskPrompt = ref('');
@@ -412,10 +404,10 @@ async function sendPormptHandle() {
     }
     let openai;
     let modelName;
-    if (selectedModelName === 'self-server') {
+    if (selectedModelName.value === 'self-server') {
         openai = new OpenAI({
             apiKey: '',
-            baseURL: baseURL.value,
+            baseURL: selfServerBaseURL.value,
             dangerouslyAllowBrowser: true,
         });
         modelName = selfServerModelName.value;
@@ -428,7 +420,7 @@ async function sendPormptHandle() {
             apiKey: apiKey.value,
             dangerouslyAllowBrowser: true,
         });
-        modelName = selectedModelName;
+        modelName = selectedModelName.value;
     }
 
     if (rfb) {

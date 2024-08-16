@@ -21,6 +21,8 @@
     "nunjucks": "^3.2.4",
     "openai": "^4.47.1",
     "patch-package": "^8.0.0",
+    "pinia": "^2.2.2",
+    "pinia-plugin-persistedstate": "^3.2.1",
     "postinstall-postinstall": "^2.1.0",
     "vue": "^3.4.21",
     "xstate": "^5.13.0"
