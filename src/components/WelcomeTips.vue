@@ -53,7 +53,7 @@ const action = ref([
 const markedContent = ref('');
 
 onMounted(async () => {
-    const response = await fetch('/src/assets/WelcomeTips.md');
+    const response = await fetch('WelcomeTips.md');
     const markdown = await response.text();
     markedContent.value = marked(markdown);
 });

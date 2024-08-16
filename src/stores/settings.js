@@ -8,8 +8,7 @@ export const useSettingsStore = defineStore({
 
             selectedModel: 1,
             selectedModelName: 'gpt-4o',
-
-            apiKey: 'YOUR_API', // OpenAI API Key
+            apiKey: '', // 
 
             selfServerBaseURL: 'http://localhost:8000', // Self Server Base URL
             selfServerModelName: 'Phi-3-vision-128k-instruct', // Self Server Model Name
